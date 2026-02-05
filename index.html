@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fingerprint</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="scan">
+        <div class="fingerprint" id="fingerprint">
+            <!-- simple fingerprint made from SVG arcs -->
+            <svg viewBox="0 0 120 140" aria-hidden="true" focusable="false">
+                <g fill="none" stroke="#0ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M60 130 C60 110 60 90 60 70" opacity="0.9"/>
+                    <path d="M60 110 C60 95 55 85 50 78" opacity="0.75"/>
+                    <path d="M60 98 C60 85 65 75 70 70" opacity="0.65"/>
+                    <path d="M42 120 C46 105 46 92 46 78" opacity="0.6"/>
+                    <path d="M78 120 C74 105 74 92 74 78" opacity="0.6"/>
+                    <path d="M34 90 C46 84 54 70 60 58" opacity="0.5"/>
+                    <path d="M86 90 C74 84 66 70 60 58" opacity="0.5"/>
+                </g>
+            </svg>
+            <div class="scan-line" aria-hidden="true"></div>
+        </div>
+        <h3 id="status">Scanning...</h3>
+        <div class="progress"><span id="percent">0%</span></div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+            <button id="use-bio">Use Biometric</button>
+            <button id="restart" hidden>Restart</button>
+        </div>
+    </div>
+
+   <script src="index.js"></script>
+</body>
+</html>

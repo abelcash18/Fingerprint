@@ -1,0 +1,15 @@
+{
+  "name": "fingerprint-demo-server",
+  "version": "1.0.0",
+  "description": "Minimal WebAuthn demo server for the Fingerprint UI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^6.0.0",
+    "base64url": "^3.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

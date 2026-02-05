@@ -1,0 +1,113 @@
+@import url();
+       :root{
+            --bg: #05060a;
+            --accent: #00f0ef;
+            --muted: #a3a3a3;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            font-family:Inter,Segoe UI,system-ui,Arial,Helvetica,sans-serif;
+            background: linear-gradient(180deg,#03040a 0%, #081025 100%);
+            color: #e9f7f7;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .scan{
+            width:320px;
+            padding:28px;
+            border-radius:12px;
+            text-align:center;
+            background: rgba(255,255,255,0.02);
+            box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+            position:relative;
+            overflow:hidden;
+        }
+
+        .fingerprint{
+            position:relative;
+            width:140px;
+            height:160px;
+            margin:0 auto 14px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .fingerprint svg{width:120px;height:140px}
+        .fingerprint g path{stroke:rgba(0,240,239,0.9)}
+
+        .scan-line{
+            position:absolute;
+            left:6%;
+            right:6%;
+            height:6px;
+            border-radius:6px;
+            background: linear-gradient(90deg, rgba(0,240,239,0.05), var(--accent), rgba(0,240,239,0.05));
+            box-shadow: 0 0 18px rgba(0,240,239,0.2), 0 0 40px rgba(0,240,239,0.08);
+            pointer-events:none;
+            transform: translateY(-120%);
+        }
+
+        @keyframes slide{
+            0%{transform:translateY(-120%);opacity:0}
+            10%{opacity:1}
+            50%{transform:translateY(50%);opacity:1}
+            90%{opacity:1}
+            100%{transform:translateY(220%);opacity:0}
+        }
+
+        .fingerprint.scanning .scan-line{
+            animation: slide 2.2s linear infinite;
+        }
+
+        /* show a subtle fingerprint pattern overlay on the scanning container */
+        .scan::before{
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .35s ease;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            mix-blend-mode: overlay;
+        }
+
+        .scan.scanning::before{
+            /* much lower visibility while scanning */
+            opacity: 0.18;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%20200%20260'%3E%3Cg fill='none' stroke='%2300f0ef' stroke-width='3' opacity='0.03' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M100%20240%20C100%20200%20100%20160%20100%20120'/%3E%3Cpath d='M100%20220%20C86%20190%2076%20160%2070%20130'/%3E%3Cpath d='M100%20200%20C114%20170%20124%20140%20130%20120'/%3E%3Cpath d='M78%20210%20C86%20190%2092%20170%2098%20150'/%3E%3Cpath d='M122%20210%20C114%20190%20108%20170%20102%20150'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .scan.success::before{
+            /* keep success visible but still subtle */
+            opacity: 0.22;
+            filter: hue-rotate(80deg) saturate(120%);
+        }
+
+        .fingerprint svg g path{
+            transition: stroke 300ms ease, filter 300ms ease, opacity 300ms ease;
+        }
+        .fingerprint.scanning svg g path{filter: drop-shadow(0 0 8px rgba(0,240,239,0.4));}
+        .fingerprint.success svg g path{stroke:#8fff9a; filter: drop-shadow(0 0 14px rgba(143,255,154,0.14));}
+
+        h3{margin:6px 0 10px;font-weight:600}
+
+        .progress{height:18px;color:var(--muted);font-weight:600}
+        .progress span{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px}
+
+        button{margin-top:12px;padding:8px 12px;border-radius:8px;border:0;background:transparent;color:var(--accent);cursor:pointer}
+        button:hover{filter:brightness(1.15)}
+
+        @media (max-width:420px){
+            .scan{width:92%;padding:18px}
+            .fingerprint{width:120px;height:140px}
+        }
+
+        /* accessibility focus */
+        button:focus{outline:2px solid rgba(0,240,239,0.25);outline-offset:2px}

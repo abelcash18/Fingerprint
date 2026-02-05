@@ -99,31 +99,107 @@
                 startScan();
             });
 
-            // Try WebAuthn biometric auth. Note: requires HTTPS and a previously-registered credential.
+            // Helpers for WebAuthn buffer encoding/decoding
+            function base64ToBuffer(base64){
+                const str = atob(base64);
+                const buf = new Uint8Array(str.length);
+                for(let i=0;i<str.length;i++) buf[i] = str.charCodeAt(i);
+                return buf.buffer;
+            }
+
+            function arrayBufferToBase64(buf){
+                const bytes = new Uint8Array(buf);
+                let str = '';
+                for(let i=0;i<bytes.byteLength;i++) str += String.fromCharCode(bytes[i]);
+                return btoa(str);
+            }
+
+            // WebAuthn via server endpoints for real biometric scanning
             useBioBtn.addEventListener('click', async ()=>{
                 stopScan();
-                statusEl.textContent = 'Waiting for biometric...';
+                const username = 'demo-user';
+                statusEl.textContent = 'Preparing biometric...';
                 percentEl.textContent = '';
-                // Attempt platform authenticator
-                if(!window.PublicKeyCredential || !navigator.credentials){
-                    statusEl.textContent = 'WebAuthn not supported — falling back';
-                    setTimeout(()=> startScan(), 900);
-                    return;
-                }
 
                 try{
-                    // create a random challenge for this demo — a real app must use server-provided challenge
-                    const challenge = new Uint8Array(32);
-                    window.crypto.getRandomValues(challenge);
-                    const publicKey = {
-                        challenge: challenge,
-                        timeout: 60000,
-                        userVerification: 'preferred'
+                    // Try to get authentication options from server
+                    const authOptsResp = await fetch('/generate-authentication-options', {
+                        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username})
+                    });
+
+                    if(!authOptsResp.ok){
+                        // No credential registered — register first
+                        statusEl.textContent = 'Registering fingerprint...';
+                        const regResp = await fetch('/generate-registration-options', {
+                            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username})
+                        });
+                        if(!regResp.ok) throw new Error('Failed to generate registration options');
+                        const regOptions = await regResp.json();
+                        
+                        // Convert challenge and user.id to ArrayBuffer
+                        if(regOptions.challenge) regOptions.challenge = Uint8Array.from(atob(regOptions.challenge), c=>c.charCodeAt(0));
+                        if(regOptions.user && regOptions.user.id) regOptions.user.id = Uint8Array.from(atob(regOptions.user.id), c=>c.charCodeAt(0));
+                        
+                        const cred = await navigator.credentials.create({publicKey: regOptions});
+                        if(!cred) throw new Error('Registration cancelled');
+
+                        const attestationResponse = {
+                            id: cred.id,
+                            rawId: arrayBufferToBase64(cred.rawId),
+                            response: {
+                                clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
+                                attestationObject: arrayBufferToBase64(cred.response.attestationObject),
+                            },
+                            type: cred.type
+                        };
+
+                        const verifyRegResp = await fetch('/verify-registration', {
+                            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username, attestationResponse})
+                        });
+                        const verifyRegJson = await verifyRegResp.json();
+                        if(!verifyRegJson.verified) throw new Error('Registration verification failed');
+
+                        statusEl.textContent = 'Fingerprint registered — authenticating...';
+                        await new Promise(r => setTimeout(r, 700));
+                        useBioBtn.click(); // Retry authentication
+                        return;
+                    }
+
+                    // Get authentication options
+                    const authOptions = await authOptsResp.json();
+                    statusEl.textContent = 'Scanning fingerprint...';
+
+                    // Convert challenge and allowCredentials
+                    if(authOptions.challenge) authOptions.challenge = base64ToBuffer(authOptions.challenge);
+                    if(authOptions.allowCredentials){
+                        authOptions.allowCredentials = authOptions.allowCredentials.map(c=>({
+                            id: base64ToBuffer(c.id),
+                            type: c.type,
+                            transports: c.transports
+                        }));
+                    }
+
+                    const assertion = await navigator.credentials.get({publicKey: authOptions});
+                    if(!assertion) throw new Error('Authentication cancelled');
+
+                    const assertionResponse = {
+                        id: assertion.id,
+                        rawId: arrayBufferToBase64(assertion.rawId),
+                        response: {
+                            authenticatorData: arrayBufferToBase64(assertion.response.authenticatorData),
+                            clientDataJSON: arrayBufferToBase64(assertion.response.clientDataJSON),
+                            signature: arrayBufferToBase64(assertion.response.signature),
+                            userHandle: assertion.response.userHandle ? arrayBufferToBase64(assertion.response.userHandle) : null
+                        },
+                        type: assertion.type
                     };
 
-                    const cred = await navigator.credentials.get({publicKey});
-                    if(cred){
-                        // success — show granted state
+                    const verifyResp = await fetch('/verify-authentication', {
+                        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username, assertionResponse})
+                    });
+                    const verifyJson = await verifyResp.json();
+
+                    if(verifyJson && verifyJson.verified){
                         statusEl.textContent = 'Biometric Verified';
                         percentEl.textContent = '100%';
                         fingerprint.classList.add('success');
@@ -131,11 +207,11 @@
                         playSuccess();
                         restartBtn.hidden = false;
                     }else{
-                        statusEl.textContent = 'No credential — fallback to scan';
-                        setTimeout(()=> startScan(), 800);
+                        statusEl.textContent = 'Verification failed — fallback';
+                        setTimeout(()=> startScan(), 900);
                     }
                 }catch(err){
-                    // NotAllowedError or other — fallback
+                    console.error(err);
                     statusEl.textContent = (err && err.message) ? err.message : 'Biometric failed';
                     setTimeout(()=> startScan(), 900);
                 }

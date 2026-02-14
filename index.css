@@ -64,7 +64,6 @@
             animation: slide 2.2s linear infinite;
         }
 
-        /* show a subtle fingerprint pattern overlay on the scanning container */
         .scan::before{
             content: '';
             position: absolute;
@@ -79,13 +78,11 @@
         }
 
         .scan.scanning::before{
-            /* much lower visibility while scanning */
             opacity: 0.18;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%20200%20260'%3E%3Cg fill='none' stroke='%2300f0ef' stroke-width='3' opacity='0.03' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M100%20240%20C100%20200%20100%20160%20100%20120'/%3E%3Cpath d='M100%20220%20C86%20190%2076%20160%2070%20130'/%3E%3Cpath d='M100%20200%20C114%20170%20124%20140%20130%20120'/%3E%3Cpath d='M78%20210%20C86%20190%2092%20170%2098%20150'/%3E%3Cpath d='M122%20210%20C114%20190%20108%20170%20102%20150'/%3E%3C/g%3E%3C/svg%3E");
         }
 
         .scan.success::before{
-            /* keep success visible but still subtle */
             opacity: 0.22;
             filter: hue-rotate(80deg) saturate(120%);
         }
@@ -109,5 +106,4 @@
             .fingerprint{width:120px;height:140px}
         }
 
-        /* accessibility focus */
         button:focus{outline:2px solid rgba(0,240,239,0.25);outline-offset:2px}

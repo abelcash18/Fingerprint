@@ -8,11 +8,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// In-memory user store for demo only
 const users = new Map();
 const rpName = 'Fingerprint Demo';
 const rpID = 'localhost';
-const origin = 'http://localhost:8000'; // adjust if using different port
+const origin = 'http://127.0.0.1:5500/'; 
 
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
@@ -83,7 +82,6 @@ app.post('/verify-authentication', async (req, res) => {
 
   try{
     const dbCred = user.devices.find(d => d.credentialID && Buffer.compare(Buffer.from(d.credentialID), Buffer.from(assertionResponse.rawId)));
-    // For demo, pick first device
     const expectedCred = user.devices[0];
 
     const verification = await verifyAuthenticationResponse({

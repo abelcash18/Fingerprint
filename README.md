@@ -80,3 +80,4 @@ README.md       - This file
 - Storage is in-memory; credentials are lost on server restart
 - Real deployments should use a proper database and HTTPS
 - Challenge handling follows WebAuthn best practices via simplewebauthn library
+# Fingerprint
